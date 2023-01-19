@@ -7,6 +7,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"html/template"
 	"io"
 	"net/http"
 	"os"
@@ -22,6 +23,7 @@ import (
 	"github.com/gnolang/gno/pkgs/std"
 	"github.com/gorilla/mux"
 	"github.com/gotuna/gotuna"
+	"github.com/yuin/goldmark"
 
 	"github.com/gnolang/gno/gnoland/website/static" // for static files
 	"github.com/gnolang/gno/pkgs/sdk/vm"            // for error types
@@ -87,38 +89,42 @@ func main() {
 	}
 }
 
-func handlerHome(app gotuna.App) http.Handler {
-	md := filepath.Join(flags.pagesDir, "HOME.md")
-	homeContent := osm.MustReadFile(md)
+func mustMarkdownConvertFile(mdfile string) template.HTML {
+	bz := osm.MustReadFile(filepath.Join(flags.pagesDir, mdfile))
+	return mustMarkdownConvert(bz)
+}
 
+func mustMarkdownConvert(bz []byte) template.HTML {
+	var buf strings.Builder
+	if err := goldmark.Convert(bz, &buf); err != nil {
+		panic(err)
+	}
+	return template.HTML(buf.String())
+}
+
+func handlerHome(app gotuna.App) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		app.NewTemplatingEngine().
-			Set("HomeContent", string(homeContent)).
+			Set("HomeContent", mustMarkdownConvertFile("HOME.md")).
 			Render(w, r, "home.html", "funcs.html")
 	})
 }
 
 func handlerAbout(app gotuna.App) http.Handler {
-	md := filepath.Join(flags.pagesDir, "ABOUT.md")
-	mainContent := osm.MustReadFile(md)
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		app.NewTemplatingEngine().
 			Set("Title", "About").
-			Set("MainContent", string(mainContent)).
+			Set("MainContent", mustMarkdownConvertFile("ABOUT.md")).
 			Render(w, r, "generic.html", "funcs.html")
 	})
 }
 
 func handlerGor(app gotuna.App) http.Handler {
-	md := filepath.Join(flags.pagesDir, "GOR.md")
-	mainContent := osm.MustReadFile(md)
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		app.NewTemplatingEngine().
-			Set("MainContent", string(mainContent)).
+			Set("MainContent", mustMarkdownConvertFile("GOR.md")).
 			Set("Title", "About").
-			Render(w, r, "generic.html", "funcs.html")
+			Render(w, r, "gor.html", "funcs.html")
 	})
 }
 
@@ -290,7 +296,7 @@ func handleRealmRender(app gotuna.App, w http.ResponseWriter, r *http.Request) {
 	tmpl.Set("RealmPath", rlmpath)
 	tmpl.Set("Query", string(querystr))
 	tmpl.Set("PathLinks", pathLinks)
-	tmpl.Set("Contents", string(res.Data))
+	tmpl.Set("Contents", mustMarkdownConvert(res.Data))
 	tmpl.Render(w, r, "realm_render.html", "funcs.html")
 }
 

@@ -5,17 +5,15 @@
       <title>Gno.land - {{ .Data.Title }}</title>
     {{ template "html_head" }}
   </head>
-  <body onload="main()">
+  <body>
     <div id="root">
       <div id="header">
         {{ template "header_logo" }}
         {{ template "header_buttons" }}
       </div>
       <div id="home">
-        <pre id="source">
-{{ .Data.MainContent }}
-        </pre>
-      </div>
+				{{ .Data.MainContent }}
+			</div>
       {{ template "footer" }}
     </div>
     {{ template "js" }}

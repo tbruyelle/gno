@@ -5,7 +5,7 @@
     <title>Gno.land</title>
     {{ template "html_head" }}
   </head>
-  <body onload="main()">
+  <body>
     <div id="root">
       <div id="header">
         {{ template "header_logo" }}<span id="logo_path"><a href="/r/{{ .Data.RealmName }}">/r/{{ .Data.RealmName }}</a>
@@ -21,7 +21,7 @@
       </div>
 
       <div id="realm_render">
-        <pre id="source">{{ .Data.Contents }}</pre>
+        {{ .Data.Contents }}
       </div>
       {{ template "footer" }}
     </div>

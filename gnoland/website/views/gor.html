@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Gno.land</title>
+      <title>Gno.land - {{ .Data.Title }}</title>
     {{ template "html_head" }}
   </head>
   <body>
@@ -11,13 +11,8 @@
         {{ template "header_logo" }}
         {{ template "header_buttons" }}
       </div>
-
-      <div id="home">
-        {{ .Data.HomeContent }}
-      </div>
-      <div id="subscribe">
-        {{ template "subscribe" }}
-      </div>
+      <div id="home">{{ .Data.MainContent }}</div>
+      <div id="subscribe">{{ template "subscribe-gor" }}</div>
       {{ template "footer" }}
     </div>
     {{ template "js" }}
