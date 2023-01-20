@@ -24,6 +24,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gotuna/gotuna"
 	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/renderer"
+	"github.com/yuin/goldmark/util"
 
 	"github.com/gnolang/gno/gnoland/website/static" // for static files
 	"github.com/gnolang/gno/pkgs/sdk/vm"            // for error types
@@ -96,7 +98,13 @@ func mustMarkdownConvertFile(mdfile string) template.HTML {
 
 func mustMarkdownConvert(bz []byte) template.HTML {
 	var buf strings.Builder
-	if err := goldmark.Convert(bz, &buf); err != nil {
+	m := goldmark.New(
+		goldmark.WithRendererOptions(
+			renderer.WithNodeRenderers(
+				util.Prioritized(&fencedBlockHTMLRenderer{}, 0),
+			)),
+	)
+	if err := m.Convert(bz, &buf); err != nil {
 		panic(err)
 	}
 	return template.HTML(buf.String())
