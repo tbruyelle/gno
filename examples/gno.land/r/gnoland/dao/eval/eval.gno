@@ -1,7 +1,6 @@
 package eval
 
 import (
-	"fmt"
 	"std"
 	"strconv"
 	"time"
@@ -39,4 +38,12 @@ func CreateContrib(name, body string) id {
 	}
 	contribs.Set(c.id.String(), c)
 	return c.id
+}
+
+func Render(path string) string {
+	return `!!! info
+
+Hello world
+
+!!!`
 }
