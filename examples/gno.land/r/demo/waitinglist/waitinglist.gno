@@ -60,25 +60,43 @@ func GetList(id ListID) *List {
 	return n.(*List)
 }
 
-func SubscribeList(id ListID) {
-	std.AssertOriginCall()
+func mustGetList(id ListID) *List {
 	list := GetList(id)
 	if list == nil {
 		panic("list not found")
 	}
+	return list
+}
+
+func SubscribeList(id ListID) {
+	std.AssertOriginCall()
+	list := mustGetList(id)
 	caller := std.GetOrigCaller()
+	// TODO ensure caller is not already registered
 	list.q.Push(caller)
 }
 
+func (l List) render() string {
+	return l.id.String() + " " +
+		l.name + " " +
+		l.creator.String() + " " +
+		strconv.Itoa(l.q.Length()) + "\n"
+}
+
 func Render(path string) string {
-	var str string
-	listsByID.Iterate("", "", func(n *avl.Node) bool {
-		list := n.Value().(*List)
-		str += list.id.String() + " " +
-			list.name + " " +
-			list.creator.String() + " " +
-			strconv.Itoa(list.q.Length()) + "\n"
-		return false
-	})
-	return str
+	if path == "" {
+		var str string
+		listsByID.Iterate("", "", func(n *avl.Node) bool {
+			list := n.Value().(*List)
+			str += list.render()
+			return false
+		})
+		return str
+	}
+	// path contains the id of a waiting list
+	id, err := strconv.Atoi(path)
+	if err != nil {
+		panic(err)
+	}
+	return mustGetList(ListID(id)).render()
 }
