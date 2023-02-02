@@ -43,4 +43,12 @@ func TestSubscribeList(t *testing.T) {
 	if render := Render(id.String()); render != expectedRender {
 		t.Fatalf("invalid Render, expected\n%s\ngot\n%s", expectedRender, render)
 	}
+
+	defer func() {
+		err := recover()
+		if err.(string) != "already subscribed" {
+			t.Errorf("expected panic because already subscribed")
+		}
+	}()
+	SubscribeList(id)
 }

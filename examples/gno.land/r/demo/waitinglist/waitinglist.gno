@@ -26,6 +26,14 @@ type List struct {
 	name        string
 	description string
 	q           *queue.Queue
+	subs        avl.Tree
+}
+
+func CreateList(name, description string) ListID {
+	l := newList(name, description)
+	listsByName.Set(name, l)
+	listsByID.Set(l.id.String(), l)
+	return l.id
 }
 
 func newList(name, description string) *List {
@@ -43,13 +51,6 @@ func newList(name, description string) *List {
 		q:           queue.New(),
 	}
 	return l
-}
-
-func CreateList(name, description string) ListID {
-	l := newList(name, description)
-	listsByName.Set(name, l)
-	listsByID.Set(l.id.String(), l)
-	return l.id
 }
 
 func GetList(id ListID) *List {
@@ -72,8 +73,11 @@ func SubscribeList(id ListID) {
 	std.AssertOriginCall()
 	list := mustGetList(id)
 	caller := std.GetOrigCaller()
-	// TODO ensure caller is not already registered
+	if _, found := list.subs.Get(caller.String()); found {
+		panic("already subscribed")
+	}
 	list.q.Push(caller)
+	list.subs.Set(caller.String(), caller)
 }
 
 func (l List) render() string {
