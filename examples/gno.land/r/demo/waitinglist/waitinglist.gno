@@ -80,6 +80,22 @@ func SubscribeList(id ListID) {
 	list.subs.Set(caller.String(), caller)
 }
 
+func ListNext(id ListID) string {
+	std.AssertOriginCall()
+	list := mustGetList(id)
+	caller := std.GetOrigCaller()
+	if list.creator != caller {
+		panic("only list creator can call ListNext")
+	}
+	next := list.q.Pop()
+	if next == nil {
+		panic("empty list")
+	}
+	addr := next.(std.Address).String()
+	list.subs.Remove(addr)
+	return addr
+}
+
 func (l List) render() string {
 	return l.id.String() + " " +
 		l.name + " " +

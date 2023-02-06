@@ -4,11 +4,12 @@ import (
 	"std"
 	"testing"
 
+	"gno.land/p/demo/testutils"
 	"gno.land/p/demo/ufmt"
 )
 
 func TestCreateList(t *testing.T) {
-	user := std.Address("g1us8428u2a5satrlxzagqqa5m6vmuze025anjlj")
+	user := testutils.TestAddress("user")
 	std.TestSetOrigCaller(user)
 
 	id := CreateList("list1", "desc1")
@@ -33,22 +34,55 @@ func TestCreateList(t *testing.T) {
 }
 
 func TestSubscribeList(t *testing.T) {
-	user := std.Address("g1us8428u2a5satrlxzagqqa5m6vmuze025anjlj")
+	user := testutils.TestAddress("user")
 	std.TestSetOrigCaller(user)
-	id := CreateList("list42", "")
+	id := CreateList(t.Name(), "")
 
 	SubscribeList(id)
 
-	expectedRender := ufmt.Sprintf("%s list42 %s 1\n", id.String(), user.String())
+	expectedRender := ufmt.Sprintf("%s %s %s 1\n", id.String(), t.Name(), user.String())
 	if render := Render(id.String()); render != expectedRender {
 		t.Fatalf("invalid Render, expected\n%s\ngot\n%s", expectedRender, render)
 	}
 
-	defer func() {
-		err := recover()
-		if err.(string) != "already subscribed" {
-			t.Errorf("expected panic because already subscribed")
-		}
-	}()
+	testutils.RequirePanic(t, func() {
+		SubscribeList(id)
+	}, "already subscribed")
+}
+
+func TestListNext(t *testing.T) {
+	user := testutils.TestAddress("user")
+	std.TestSetOrigCaller(user)
+	id := CreateList(t.Name(), "")
+	sub1 := testutils.TestAddress("sub1")
+	std.TestSetOrigCaller(sub1)
+	SubscribeList(id)
+	sub2 := testutils.TestAddress("sub2")
+	std.TestSetOrigCaller(sub2)
+	SubscribeList(id)
+
+	testutils.RequirePanic(t, func() {
+		ListNext(id)
+	}, "only list creator can call ListNext")
+
+	std.TestSetOrigCaller(user)
+
+	next := ListNext(id)
+
+	if next != sub1 {
+		t.Fatalf("expected next %s got %s", sub1, next)
+	}
+
+	next = ListNext(id)
+
+	if next != sub2 {
+		t.Fatalf("expected next %s got %s", sub2, next)
+	}
+
+	testutils.RequirePanic(t, func() {
+		ListNext(id)
+	}, "empty list")
+
+	// sub2 subscribes again
 	SubscribeList(id)
 }
