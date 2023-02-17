@@ -14,6 +14,7 @@ import (
 	// "go/build"
 
 	gno "github.com/gnolang/gno/pkgs/gnolang"
+	"github.com/gnolang/gno/stdlibs"
 )
 
 func TestPackages(t *testing.T) {
@@ -71,7 +72,11 @@ func runPackageTest(t *testing.T, dir string, path string) {
 		PkgPath: "test",
 		Output:  stdout,
 		Store:   store,
-		Context: nil,
+		Context: stdlibs.ExecContext{
+			ChainID:   "dev",
+			Height:    123,
+			Timestamp: 1234567890,
+		},
 	})
 	m.TestMemPackage(t, memPkg)
 
