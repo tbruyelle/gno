@@ -198,6 +198,27 @@ func gnoTestPkg(
 		// tfiles, ifiles := gno.ParseMemPackageTests(memPkg)
 		tfiles, ifiles := parseMemPackageTests(memPkg)
 
+		/*
+			tfiles, ifiles, _ := gno.ParseMemPackageTests(memPkg)
+			var tt []testing.InternalTest
+			for _, f := range tfiles.Files {
+				for _, d := range f.Decls {
+					if fd, ok := d.(*gno.FuncDecl); ok {
+						fname := string(fd.Name)
+						if strings.HasPrefix(fname, "Test") {
+							tt = append(tt, testing.InternalTest{
+								Name: fname,
+								F: func(t *testing.T) {
+								},
+							})
+						}
+					}
+				}
+			}
+
+			testing.RunTests(func(_, _ string) (bool, error) { return true, nil }, []testing.InternalTest{})
+		*/
+
 		// run test files in pkg
 		{
 			m := tests.TestMachine(testStore, stdout, "main")

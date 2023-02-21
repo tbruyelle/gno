@@ -1164,9 +1164,10 @@ func ParseMemPackage(memPkg *std.MemPackage) (fset *FileSet) {
 	return fset
 }
 
-func ParseMemPackageTests(memPkg *std.MemPackage) (tset, itset *FileSet) {
+func ParseMemPackageTests(memPkg *std.MemPackage) (tset, itset, ftset *FileSet) {
 	tset = &FileSet{}
 	itset = &FileSet{}
+	ftset = &FileSet{}
 	for _, mfile := range memPkg.Files {
 		if !strings.HasSuffix(mfile.Name, ".gno") {
 			continue // skip this file.
@@ -1185,6 +1186,8 @@ func ParseMemPackageTests(memPkg *std.MemPackage) (tset, itset *FileSet) {
 			} else {
 				tset.AddFiles(n)
 			}
+		} else if strings.HasPrefix(mfile.Name, "_filetest.gno") {
+			ftset.AddFiles(n)
 		} else if memPkg.Name == string(n.PkgName) {
 			// skip package file.
 		} else {
@@ -1193,7 +1196,7 @@ func ParseMemPackageTests(memPkg *std.MemPackage) (tset, itset *FileSet) {
 				memPkg.Name, memPkg.Name, n.PkgName, mfile))
 		}
 	}
-	return tset, itset
+	return tset, itset, ftset
 }
 
 func (fs *FileSet) AddFiles(fns ...*FileNode) {

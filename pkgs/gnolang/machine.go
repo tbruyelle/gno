@@ -211,7 +211,7 @@ func (m *Machine) TestMemPackage(t *testing.T, memPkg *std.MemPackage) {
 	testingtv := TypedValue{T: gPackageType, V: testingpv}
 	testingcx := &ConstExpr{TypedValue: testingtv}
 	// parse test files.
-	tfiles, itfiles := ParseMemPackageTests(memPkg)
+	tfiles, itfiles, _ := ParseMemPackageTests(memPkg)
 	{ // first, tfiles which run in the same package.
 		pv := m.Store.GetPackage(memPkg.Path, false)
 		pvBlock := pv.GetBlock(m.Store)
