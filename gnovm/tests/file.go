@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pmezard/go-difflib/difflib"
+
 	gno "github.com/gnolang/gno/gnovm/pkg/gnolang"
 	"github.com/gnolang/gno/gnovm/stdlibs"
 	"github.com/gnolang/gno/tm2/pkg/crypto"
@@ -297,7 +299,14 @@ func RunFileTest(rootDir string, path string, opts ...RunFileTestOption) error {
 						if resWanted == "" {
 							panic(fmt.Sprintf("fail on %s: got unexpected output: %s", path, res))
 						} else {
-							panic(fmt.Sprintf("fail on %s: got:\n%s\n\nwant:\n%s\n", path, res, resWanted))
+							diff, _ := difflib.GetUnifiedDiffString(difflib.UnifiedDiff{
+								A:        difflib.SplitLines(res),
+								B:        difflib.SplitLines(resWanted),
+								FromFile: "Got",
+								ToFile:   "Want",
+								Context:  6,
+							})
+							panic(fmt.Sprintf("fail on %s: got:\n%s\n\nwant:\n%s\n\n%s\n", path, res, resWanted, diff))
 						}
 					}
 				}
