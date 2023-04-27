@@ -24,6 +24,10 @@ func Render(path string) string {
 	))
 
 	dom.Body.Append(
+		ui.Jumbotron(
+			ui.H1("Hello Jumbo"),
+			ui.Text("This is a jumbotron, a markdown extension"),
+		),
 		ui.Paragraph("Simple UI demonstration."),
 		ui.BulletList(
 			ui.Text("a text"),

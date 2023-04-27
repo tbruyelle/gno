@@ -123,3 +123,23 @@ func Bold(text string) stringer   { return Raw{Content: "**" + text + "**"} }
 func Italic(text string) stringer { return Raw{Content: "_" + text + "_"} }
 func Code(text string) stringer   { return Raw{Content: "`" + text + "`"} }
 func HR() stringer                { return Raw{Content: "\n---\n"} }
+
+// Extension represents a custom markdown wrapped between `:::`.
+type Extension struct {
+	Name    string
+	Content Element
+}
+
+func (e Extension) String() string {
+	return ":::" + e.Name + "\n" + e.Content.Content + ":::\n"
+}
+
+func Jumbotron(content ...stringer) stringer {
+	j := Extension{
+		Name: "jumbotron",
+	}
+	for _, c := range content {
+		j.Content.Append(c)
+	}
+	return j
+}
