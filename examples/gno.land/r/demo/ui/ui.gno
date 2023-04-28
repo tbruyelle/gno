@@ -1,11 +1,14 @@
 package ui
 
-import "gno.land/p/demo/ui"
+import (
+	"gno.land/p/demo/avl"
+	"gno.land/p/demo/ufmt"
+	"gno.land/p/demo/ui"
+)
 
 func Render(path string) string {
 	// TODO: build this realm as a demo one with one page per feature.
 
-	// TODO: pagination
 	// TODO: non-standard markdown
 	// TODO: error, warn
 	// TODO: header
@@ -13,6 +16,13 @@ func Render(path string) string {
 	// TODO: toc
 	// TODO: forms
 	// TODO: comments
+
+	// Fill some items for the pagination
+	items := avl.NewTree()
+	for i := 0; i < 30; i++ {
+		k := ufmt.Sprintf("item%d", i)
+		items.Set(k, ui.Raw{k})
+	}
 
 	var dom ui.DOM
 
@@ -28,6 +38,7 @@ func Render(path string) string {
 			ui.H1("Hello Jumbo"),
 			ui.Text("This is a jumbotron, a markdown extension"),
 		),
+		ui.Paginate(0, 10, items, func(p int) string { return ufmt.Sprintf("page=%d", p) }),
 		ui.Paragraph("Simple UI demonstration."),
 		ui.BulletList(
 			ui.Text("a text"),

@@ -51,3 +51,8 @@ func (tree *Tree) Iterate(start, end string, cb func(*Node) bool) bool {
 func (tree *Tree) IterateReverse(start, end string, cb func(*Node) bool) bool {
 	return tree.node.TraverseInRange(start, end, false, true, cb)
 }
+
+// Shortcut for TraverseByOffset
+func (tree *Tree) IterateByOffset(offset, limit int, cb func(*Node) bool) bool {
+	return tree.node.TraverseByOffset(offset, limit, true, true, cb)
+}

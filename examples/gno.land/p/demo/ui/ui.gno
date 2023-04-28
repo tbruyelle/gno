@@ -1,5 +1,12 @@
 package ui
 
+import (
+	"strconv"
+	"strings"
+
+	"gno.land/p/demo/avl"
+)
+
 type DOM struct {
 	// metadata
 	Prefix string
@@ -142,4 +149,60 @@ func Jumbotron(content ...stringer) stringer {
 		j.Content.Append(c)
 	}
 	return j
+}
+
+func Paginate(offset, limit int, tree *avl.Tree, urlFormat func(p int) string) stringer {
+	var items []stringer
+	tree.IterateByOffset(offset, limit, func(n *avl.Node) bool {
+		items = append(items, n.Value().(stringer))
+		return true
+	})
+	list := BulletList(items...)
+	pagination := Pagination(offset, limit, tree.Size(), urlFormat)
+	return Raw{list.String() + "\n\n" + pagination.String()}
+}
+
+func Pagination(offset, limit, total int, urlFormat func(page int) string) stringer {
+	if limit <= 0 {
+		panic("Pagination: limit must be positive")
+	}
+	if total == 0 {
+		// return nothing if there's no item
+		return Raw{}
+	}
+	var (
+		currentPage = offset/limit + 1
+		prevPage    = currentPage - 1
+		nextPage    = currentPage + 1
+		totalPages  = (total + limit - 1) / limit
+		content     = "Pages "
+	)
+	if prevPage >= 1 {
+		content += "[<](" + urlFormat(prevPage) + ")"
+	} else {
+		content += "<"
+	}
+	content += "|"
+
+	for i := 1; i <= totalPages; i++ {
+		switch i {
+		case currentPage:
+			content += "**" + strconv.Itoa(i) + "**|"
+		case 1, 2, currentPage - 1, currentPage, currentPage + 1, totalPages - 1, totalPages:
+			content += "[" + strconv.Itoa(i) + "](" + urlFormat(i) + ")|"
+		default:
+			if !strings.HasSuffix(content, "...|") {
+				content += "...|"
+			}
+			// if pages[len(pages)-1] != -1 {
+			// pages = append(pages, -1)
+			// }
+		}
+	}
+	if nextPage <= totalPages {
+		content += "[>](" + urlFormat(nextPage) + ")"
+	} else {
+		content += ">"
+	}
+	return Raw{content}
 }
