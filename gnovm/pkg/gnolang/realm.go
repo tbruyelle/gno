@@ -1501,7 +1501,6 @@ func isUnsaved(oo Object) bool {
 }
 
 func IsRealmPath(pkgPath string) bool {
-	// TODO: make it more distinct to distinguish from normal paths.
 	if strings.HasPrefix(pkgPath, "gno.land/r/") {
 		return true
 	} else {
