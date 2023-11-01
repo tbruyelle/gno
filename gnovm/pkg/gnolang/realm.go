@@ -1127,7 +1127,9 @@ func copyValueWithRefs(parent Object, val Value) Value {
 			Base:   toRefValue(parent, cv.Base),
 			Offset: cv.Offset,
 			Length: cv.Length,
-			Maxcap: cv.Maxcap,
+			// Force capacity to length, because we have issues with store when they
+			// are differents.
+			Maxcap: cv.Length,
 		}
 	case *StructValue:
 		fields := make([]TypedValue, len(cv.Fields))
