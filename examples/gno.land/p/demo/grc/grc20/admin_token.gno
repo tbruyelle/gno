@@ -5,6 +5,7 @@ import (
 
 	"gno.land/p/demo/avl"
 	"gno.land/p/demo/ufmt"
+	"errors"
 )
 
 // AdminToken implements a token factory with admin helpers.
@@ -184,7 +185,8 @@ func (t *AdminToken) transfer(from, to std.Address, amount uint64) error {
 	}
 
 	if from == to {
-		return ErrCannotTransferToSelf
+		// return ErrCannotTransferToSelf
+		return errors.New("cannot send to self " + from.String() + " vs " + to.String())
 	}
 
 	toBalance, err := t.balanceOf(to)
