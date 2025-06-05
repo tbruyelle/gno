@@ -81,8 +81,8 @@ func TestXXX(t *testing.T) {
 	addTree(mt.root, x)
 	fmt.Println(x)
 
-	item := []byte{3}
-	v, proof, err := it.GetWithProof(item)
+	item := []byte{1, 0}
+	v, proof, err := mt.GetWithProof(item)
 	if err != nil {
 		panic(err)
 	}
@@ -100,6 +100,7 @@ func TestXXX(t *testing.T) {
 	}
 	fmt.Println("LEFT MOST", proof.LeftPath.isLeftmost())
 	fmt.Println("RIGHT MOST", proof.LeftPath.isRightmost())
+
 	fmt.Println("VERIFY ROOT", proof.Verify(mt.root.hash))
 	fmt.Println("VERIFY", proof.VerifyItem(item, item))
 	fmt.Println("VERIFY ABS", proof.VerifyAbsence(item))
