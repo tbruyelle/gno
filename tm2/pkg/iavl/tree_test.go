@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/m1gwings/treedrawer/tree"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -50,6 +51,56 @@ func getTestDB() (db.DB, func()) {
 		}
 	}
 	return memdb.NewMemDB(), func() {}
+}
+
+func TestXXX(t *testing.T) {
+	mt := NewMutableTree(memdb.NewMemDB(), 0)
+	for _, v := range [][]byte{{1}, {2}, {4}, {5}, {7}} {
+		mt.Set(v, v)
+	}
+	v, i, err := mt.SaveVersion()
+	fmt.Printf("SAVE %X %d %v\n", v, i, err)
+	fmt.Println()
+	PrintTree(mt.ImmutableTree)
+	it := mt.ImmutableTree
+
+	var addTree func(*Node, *tree.Tree)
+	addTree = func(n *Node, x *tree.Tree) {
+		if n == nil {
+			return
+		}
+		x = x.AddChild(tree.NodeString(fmt.Sprintf("%X/%.3X", n.key, n.hash)))
+		if n.leftHash != nil {
+			addTree(n.getLeftNode(it), x)
+		}
+		if n.rightHash != nil {
+			addTree(n.getRightNode(it), x)
+		}
+	}
+	x := tree.NewTree(tree.NodeString("start"))
+	addTree(mt.root, x)
+	fmt.Println(x)
+
+	item := []byte{3}
+	v, proof, err := it.GetWithProof(item)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("LOOKING FOR", item, "VALUE", v)
+	for i, n := range proof.LeftPath {
+		fmt.Println("LEFTPATH", i, n.stringIndented(" "))
+	}
+	for i, in := range proof.InnerNodes {
+		for j, n := range in {
+			fmt.Println("INNTER NODE", i, j, n.stringIndented(" "))
+		}
+	}
+	for i, n := range proof.Leaves {
+		fmt.Println("LEAVES", i, n.stringIndented(" "))
+	}
+	fmt.Println("VERIFY ROOT", proof.Verify(mt.root.hash))
+	fmt.Println("VERIFY", proof.VerifyItem(item, item))
+	fmt.Println("VERIFY ABS", proof.VerifyAbsence(item))
 }
 
 func TestVersionedRandomTree(t *testing.T) {
