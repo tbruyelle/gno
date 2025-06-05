@@ -92,12 +92,14 @@ func TestXXX(t *testing.T) {
 	}
 	for i, in := range proof.InnerNodes {
 		for j, n := range in {
-			fmt.Println("INNTER NODE", i, j, n.stringIndented(" "))
+			fmt.Println("INNER NODE", i, j, n.stringIndented(" "))
 		}
 	}
 	for i, n := range proof.Leaves {
 		fmt.Println("LEAVES", i, n.stringIndented(" "))
 	}
+	fmt.Println("LEFT MOST", proof.LeftPath.isLeftmost())
+	fmt.Println("RIGHT MOST", proof.LeftPath.isRightmost())
 	fmt.Println("VERIFY ROOT", proof.Verify(mt.root.hash))
 	fmt.Println("VERIFY", proof.VerifyItem(item, item))
 	fmt.Println("VERIFY ABS", proof.VerifyAbsence(item))
