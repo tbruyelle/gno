@@ -3,8 +3,11 @@ package iavl
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"testing"
 
+	"github.com/davecgh/go-spew/spew"
+	treed "github.com/m1gwings/treedrawer/tree"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -19,11 +22,30 @@ func TestTreeGetWithProof(t *testing.T) {
 
 	tree := NewMutableTree(memdb.NewMemDB(), 0)
 	require := require.New(t)
-	for _, ikey := range []byte{0x11, 0x32, 0x50, 0x72, 0x99} {
+	for _, ikey := range []byte{0x32, 0x11, 0x50, 0x72, 0x99} {
 		key := []byte{ikey}
 		tree.Set(key, []byte(random.RandStr(8)))
 	}
+	// tree.Set([]byte{0x11, 0}, []byte(random.RandStr(8)))
 	root := tree.WorkingHash()
+
+	var addTree func(*Node, *treed.Tree)
+	addTree = func(n *Node, x *treed.Tree) {
+		if n == nil {
+			return
+		}
+		x = x.AddChild(treed.NodeString(fmt.Sprintf("%X / %.3X", n.key, n.hash)))
+		// x = x.AddChild(treed.NodeString(fmt.Sprintf("%X", n.key)))
+		if n.leftHash != nil {
+			addTree(n.getLeftNode(tree.ImmutableTree), x)
+		}
+		if n.rightHash != nil {
+			addTree(n.getRightNode(tree.ImmutableTree), x)
+		}
+	}
+	x := treed.NewTree(treed.NodeString("start"))
+	addTree(tree.root, x)
+	fmt.Println(x)
 
 	key := []byte{0x32}
 	val, proof, err := tree.GetWithProof(key)
@@ -37,8 +59,12 @@ func TestTreeGetWithProof(t *testing.T) {
 	err = proof.VerifyItem(key, val)
 	require.NoError(err, "%+v", err)
 
-	key = []byte{0x11, 0}
+	key = []byte{0x33}
 	val, proof, err = tree.GetWithProof(key)
+	spew.Dump(proof)
+	for i, n := range proof.Leaves {
+		fmt.Printf("LEAVES %d %X\n", i, n.Key)
+	}
 	require.NoError(err)
 	require.Empty(val)
 	require.NotNil(proof)
