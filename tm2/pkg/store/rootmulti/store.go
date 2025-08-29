@@ -7,6 +7,7 @@ import (
 	"github.com/gnolang/gno/tm2/pkg/amino"
 	abci "github.com/gnolang/gno/tm2/pkg/bft/abci/types"
 	"github.com/gnolang/gno/tm2/pkg/crypto/merkle"
+	"github.com/gnolang/gno/tm2/pkg/crypto/tmhash"
 	dbm "github.com/gnolang/gno/tm2/pkg/db"
 	"github.com/gnolang/gno/tm2/pkg/errors"
 
@@ -423,11 +424,24 @@ type storeCore struct {
 }
 
 func (si storeInfo) GetHash() []byte {
+	// Doesn't write Name, since merkle.SimpleHashFromMap() will
+	// include them via the keys.
+	bz := si.Core.CommitID.Hash
+	hasher := tmhash.New()
+
+	_, err := hasher.Write(bz)
+	if err != nil {
+		// TODO: Handle with #870
+		panic(err)
+	}
+
+	s := hasher.Sum(nil)
 	// NOTE(tb): ics23 compatibility: return the commit hash and not the hash
 	// of the commit hash.
 	// See similar change in SDK https://github.com/cosmos/cosmos-sdk/pull/6323
 	// Problem: this causes app hash mismatch when upgrading from an existing store.
-	return si.Core.CommitID.Hash
+	// s= si.Core.CommitID.Hash
+	return s
 }
 
 // ----------------------------------------

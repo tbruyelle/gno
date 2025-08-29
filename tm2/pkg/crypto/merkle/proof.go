@@ -3,6 +3,7 @@ package merkle
 import (
 	"bytes"
 
+	"github.com/gnolang/gno/tm2/pkg/crypto/tmhash"
 	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
@@ -41,6 +42,17 @@ func (poz ProofOperators) Verify(root []byte, keypath string, args [][]byte) (er
 	}
 
 	for i, op := range poz {
+		if op.ProofOp().Type == "ics23:simple" {
+			// tm2/pkg/store/rootmulti.storeInfo.Hash hashes the root of the
+			// underlying iavl store. This is not compatible with ics23 specs so we
+			// need to hash it here
+			hasher := tmhash.New()
+			_, err := hasher.Write(args[0])
+			if err != nil {
+				return err
+			}
+			args[0] = hasher.Sum(nil)
+		}
 		key := op.GetKey()
 		if len(key) != 0 {
 			if len(keys) == 0 {
