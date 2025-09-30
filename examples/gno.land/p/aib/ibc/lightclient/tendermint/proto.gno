@@ -1,6 +1,7 @@
 package tendermint
 
 import (
+	"bufio"
 	"encoding/binary"
 	"time"
 )
@@ -112,6 +113,40 @@ func serializeCanonicalPartSetHeader(total uint32, hash []byte) []byte {
 	return buf
 }
 
+// serializeCanonicalBlockID serializes a CanonicalBlockID message
+func writeCanonicalBlockID(w bufio.Writer, hash []byte, partSetTotal uint32, partSetHash []byte) {
+	// Field 1: hash (bytes)
+	if len(hash) > 0 {
+		writeTag(w, 1, 2) // field 1, wire type 2 (length-delimited)
+		writeVarint(w, uint64(len(hash)))
+		w.Write(hash)
+	}
+
+	// Field 2: part_set_header (CanonicalPartSetHeader - embedded message)
+	partSetHeaderBytes := serializeCanonicalPartSetHeader(partSetTotal, partSetHash)
+	if len(partSetHeaderBytes) > 0 {
+		writeTag(w, 2, 2) // field 2, wire type 2 (length-delimited)
+		writeVarint(w, uint64(len(partSetHeaderBytes)))
+		w.Write(partSetHeaderBytes)
+	}
+}
+
+// serializeCanonicalPartSetHeader serializes a CanonicalPartSetHeader message
+func writeCanonicalPartSetHeader(w bufio.Writer, total uint32, hash []byte) {
+	// Field 1: total (uint32 - varint)
+	if total != 0 {
+		writeTag(w, 1, 0) // field 1, wire type 0 (varint)
+		writeVarint(w, uint64(total))
+	}
+
+	// Field 2: hash (bytes)
+	if len(hash) > 0 {
+		writeTag(w, 2, 2) // field 2, wire type 2 (length-delimited)
+		writeVarint(w, uint64(len(hash)))
+		w.Write(hash)
+	}
+}
+
 // serializeTimestamp serializes a google.protobuf.Timestamp
 func serializeTimestamp(t time.Time) []byte {
 	var buf []byte
@@ -154,4 +189,44 @@ func appendFixed64(buf []byte, v uint64) []byte {
 	var b [8]byte
 	binary.LittleEndian.PutUint64(b[:], v)
 	return append(buf, b[:]...)
+}
+
+// appendTag appends a protobuf tag (field number and wire type)
+func writeTag(w bufio.Writer, fieldNum int, wireType int) {
+	tag := (fieldNum << 3) | wireType
+	writeVarint(w, uint64(tag))
+}
+
+// appendVarint appends a varint-encoded value
+func writeVarint(w bufio.Writer, v uint64) {
+	for v >= 0x80 {
+		w.WriteByte(byte(v) | 0x80)
+		v >>= 7
+	}
+	w.WriteByte(byte(v))
+}
+
+// appendFixed64 appends a fixed 64-bit value (little-endian)
+func writeFixed64(w bufio.Writer, v uint64) {
+	var b [8]byte
+	binary.LittleEndian.PutUint64(b[:], v)
+	w.Write(b[:])
+}
+
+// serializeTimestamp serializes a google.protobuf.Timestamp
+func writeTimestamp(w bufio.Writer, t time.Time) {
+	seconds := t.Unix()
+	nanos := int32(t.Nanosecond())
+
+	// Field 1: seconds (int64 - varint)
+	if seconds != 0 {
+		writeTag(w, 1, 0) // field 1, wire type 0 (varint)
+		writeVarint(w, uint64(seconds))
+	}
+
+	// Field 2: nanos (int32 - varint)
+	if nanos != 0 {
+		writeTag(w, 2, 0) // field 1, wire type 0 (varint)
+		writeVarint(w, uint64(nanos))
+	}
 }
